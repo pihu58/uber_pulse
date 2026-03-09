@@ -35,7 +35,6 @@ def validate_time(df):
     # Validate timestamps using elapsed seconds
     df=df.copy()
 
-  
     df["expected_elapsed"]=(df.groupby("trip_id")["timestamp"].transform(lambda x:(x-x.min()).dt.total_seconds()))
     dif=abs(df["expected_elapsed"]-df["elapsed_seconds"])
     df=df[dif<5]
@@ -45,6 +44,7 @@ def validate_time(df):
 
 def remove_outliers(df):
     # Handle extreme values
+
     cols=["accel_x","accel_y","accel_z","speed_kmh"]
   
     for c in cols:
