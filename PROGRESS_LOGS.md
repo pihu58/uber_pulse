@@ -622,28 +622,14 @@ Pushed frontend implementation to the repository.
 - Motion feature aggregation
 - Frontend prototype
 
-# Uber Hackathon – Work Log  
-## Pihu – Audio Analysis Lead
-
 ---
 
-# Team Structure
+# Uber Hackathon - My Work Log (Pihu - Audio Analysis Lead and Deployment)
 
-**Manit**
-- Earnings velocity tracking
-- Goal achievement prediction
-- Machine learning model development
-
-**Yogita**
-- Accelerometer data processing
-- Motion event aggregation
-- Frontend development
-
-**Pihu**
-- Audio intensity processing
-- Acoustic feature engineering
-- Stress detection
-- Project Deployment
+## Team Structure
+- **Manit**: Earnings velocity tracking, goal achievement prediction, ML model development  
+- **Yogita**: Accelerometer data analysis, motion event detection, frontend development  
+- **Pihu**: Audio intensity analysis, stress detection, acoustic feature engineering project deployment
 
 ---
 
@@ -681,7 +667,7 @@ Observations:
 
 ## Dataset Columns
 
-
+```
 audio_id
 trip_id
 timestamp
@@ -689,18 +675,19 @@ elapsed_seconds
 audio_level_db
 audio_classification
 sustained_duration_sec
-
+```
 
 ### Column Meaning
 
-
-audio_id unique record identifier
-trip_id trip identifier
-timestamp recorded time
-elapsed_seconds time since trip start
-audio_level_db total sound intensity
-audio_classification speech activity category
-sustained_duration_sec upstream duration estimate
+```
+audio_id: unique record identifier
+trip_id: trip identifier
+timestamp: recorded time
+elapsed_seconds: time since trip start
+audio_level_db: total sound intensity
+audio_classification: speech activity category
+sustained_duration_sec: upstream duration estimate
+```
 
 
 ---
@@ -724,10 +711,10 @@ Ignore unreliable derived columns and **reconstruct time features ourselves**.
 
 Files used:
 
-
+```
 audio_intensity_data.csv
 flagged_moments.csv
-
+```
 
 Initial inspection revealed:
 
@@ -739,13 +726,14 @@ Initial inspection revealed:
 
 ## Classification Categories Identified
 
-
+```
 quiet
 normal
 conversation
 loud
 very_loud
 argument
+```
 
 
 ---
@@ -769,17 +757,21 @@ Example order:
 
 ```python
 audio = audio.sort_values(["trip_id", "timestamp"])
+```
 
 Recomputed timeline:
 
+```
 elapsed_seconds = timestamp − trip_start_timestamp
+```
 
 Implementation:
-
+```
 audio["elapsed_seconds"] = (
     audio.groupby("trip_id")["timestamp"]
     .transform(lambda x: (x - x.min()).dt.total_seconds())
 )
+```
 
 Result:
 
@@ -789,10 +781,10 @@ Each trip now forms a consistent time series.
 
 Initial approach mapped labels to numbers:
 
-quiet → 0
-normal → 1
-loud → 2
-very_loud → 3
+- quiet → 0
+- normal → 1
+- loud → 2
+- very_loud → 3
 
 Problem:
 
@@ -804,61 +796,64 @@ Use typical human speech intensity ranges.
 
 Mapping used:
 
-quiet         → 35 dB
-normal        → 55 dB
-conversation  → 60 dB
-loud          → 70 dB
-very_loud     → 85 dB
-argument      → 90 dB
+- quiet         → 35 dB
+- normal        → 55 dB
+- conversation  → 60 dB
+- loud          → 70 dB
+- very_loud     → 85 dB
+- argument      → 90 dB
 
 Implementation:
-
+```
 speech_db_map = {...}
 
 audio["estimated_cabin_db"] = (
     audio["audio_classification"].map(speech_db_map)
 )
+```
 
 Fallback value:
-
+```
 fillna(55)
 March 7, 2026 – Acoustic Signal Modeling
 Separating Cabin Speech and Environmental Noise
-
+```
 Measured signal:
-
+```
 audio_level_db
-
+```
 This value includes:
-
+```
 cabin speech
 + external environment noise
 Key Insight
+```
 
 Decibels are logarithmic, so we cannot subtract dB values directly.
 
 Correct relation:
-
+```
 Power = 10^(dB / 10)
-
+```
 Therefore:
-
+```
 P_total = P_cabin + P_external
+```
 Implementation
 
 Convert decibels to power:
-
+```
 P_total = 10 ** (audio_level_db / 10)
 P_cabin = 10 ** (estimated_cabin_db / 10)
-
+```
 Compute external power:
-
+```
 P_external = max(P_total - P_cabin, small_value)
-
+```
 Convert back to decibels:
-
+```
 external_noise_db = 10 * log10(P_external)
-
+```
 This produced a physically consistent separation of sound sources.
 
 March 8, 2026 – Behavioral Audio Features
@@ -869,10 +864,10 @@ Goal:
 Detect when passenger voices dominate the environment.
 
 Formula:
-
+```
 speech_dominance_ratio =
     cabin_power / (cabin_power + external_power)
-
+```
 Range:
 
 0 → environment dominant
@@ -880,70 +875,66 @@ Range:
 
 Interpretation:
 
-low     → traffic noise
-medium  → conversation
-high    → loud passengers
-Cabin Disturbance Index (CDI)
+- low     → traffic noise
+- medium  → conversation
+- high    → loud passengers
+- Cabin Disturbance Index (CDI)
 
 Designed to measure speech intensity and dominance.
 
 Formula:
-
+```
 CDI = estimated_cabin_db / 20
       + speech_dominance_ratio * 5
-
+```
 Higher CDI indicates:
 
-louder speech
+- louder speech
 
-stronger speech dominance
+- stronger speech dominance
 
 March 8, 2026 – Sustained Duration Fix
 
-Dataset column:
-
-sustained_duration_sec
+Dataset column: sustained_duration_sec
 
 Problems identified:
 
-Derived by an unknown upstream algorithm
-
-Inconsistent with recomputed timestamps
-
-Unreliable for time analysis
+- Derived by an unknown upstream algorithm
+- Inconsistent with recomputed timestamps
+- Unreliable for time analysis
 
 Decision
 
-Discard this column and compute sustained speech segments ourselves.
-
-Sustained Speech Detection
+- Discard this column and compute sustained speech segments ourselves.
+- Sustained Speech Detection
 
 Define loud speech:
-
+```
 estimated_cabin_db > 70
-
+```
 Mark rows:
-
+```
 audio["loud_speech"]
-
+```
 Detect segment boundaries:
-
+```
 segment_change = loud_speech != loud_speech.shift()
-
+```
 Assign segment IDs per trip.
 
 Segment duration:
-
+```
 duration = end_timestamp − start_timestamp
-
+```
 Output file:
-
+```
 audio_loud_segments.csv
-
+```
 Example record:
-
+```
 trip_id   start   end   duration
 TRIP002   06:10   06:12   120s
+```
 March 9, 2026 – Temporal Clustering
 
 Observation:
@@ -952,9 +943,9 @@ Arguments rarely appear as single isolated events.
 
 Typical pattern:
 
-loud speech
-pause
-loud speech
+- loud speech
+-  pause
+- loud speech
 
 These should be treated as one disturbance episode.
 
@@ -970,14 +961,15 @@ Threshold used:
 
 Cluster fields:
 
-start_time
-end_time
-duration_sec
-events
+- start_time
+- end_time
+- duration_sec
+- events
 
 Output file:
-
+```
 audio_disturbance_clusters.csv
+```
 March 9, 2026 – Speech Escalation Detection
 
 Arguments often show increasing loudness over time.
@@ -1065,22 +1057,11 @@ Final Outcome
 
 The audio module now provides:
 
-Speech intensity signals
+- Speech intensity signals
 
-Sustained disturbance detection
+- Sustained disturbance detection
 
-Escalation detection
+- Escalation detection
 
-Trip-level acoustic insights
+- Trip-level acoustic insights
 
-These outputs will integrate with:
-
-Yogita’s motion signals
-
-Manit’s earnings model
-
-to detect:
-
-stressful driver moments
-
-driver performance patterns
