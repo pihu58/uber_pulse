@@ -264,6 +264,5 @@ https://github.com/pihu58/uber_pulse
 
 # Website link
 
-```
-https://uber-pulse.vercel.app/
-```
+[DriverPulse](https://uber-pulse.vercel.app/)
+
