@@ -893,7 +893,7 @@ Higher CDI indicates:
 
 - stronger speech dominance
 
-March 8, 2026 – Sustained Duration Fix
+ # March 8, 2026 – Sustained Duration Fix
 
 Dataset column: sustained_duration_sec
 
@@ -949,16 +949,16 @@ Typical pattern:
 
 These should be treated as one disturbance episode.
 
-Temporal Clustering Algorithm
+### Temporal Clustering Algorithm
 
 Segments are grouped if:
-
+```
 gap_between_segments < threshold
-
+```
 Threshold used:
-
+```
 60 seconds
-
+```
 Cluster fields:
 
 - start_time
@@ -970,34 +970,37 @@ Output file:
 ```
 audio_disturbance_clusters.csv
 ```
-March 9, 2026 – Speech Escalation Detection
+# March 9, 2026 – Speech Escalation Detection
 
 Arguments often show increasing loudness over time.
 
 Example pattern:
-
+```
 55 dB → 60 dB → 68 dB → 75 dB
-Detection Algorithm
+```
+### Detection Algorithm
 
-Slide a window over speech loudness values
+- Slide a window over speech loudness values
 
-Detect strictly increasing sequences
+- Detect strictly increasing sequences
 
-Record escalation events
+- Record escalation events
 
 Window size:
-
+```
 4 consecutive observations
-
+```
 Output file:
-
+```
 audio_escalation_events.csv
-
+```
 Example:
-
+```
 trip_id   start   end   start_db   end_db
 TRIP003   06:10   06:14   55        75
-March 9, 2026 – Visualization & Validation
+```
+
+# March 9, 2026 – Visualization & Validation
 
 Created timeline visualization with two panels.
 
@@ -1005,53 +1008,57 @@ Panel 1 – Environment
 
 Displays:
 
-Total audio dB
+- Total audio dB
 
-External noise levels
+- External noise levels
 
 Panel 2 – Cabin Activity
 
 Displays:
 
-Estimated speech loudness
+- Estimated speech loudness
 
-Cabin Disturbance Index
+- Cabin Disturbance Index
 
-Disturbance clusters
+- Disturbance clusters
 
-Escalation events
+- Escalation events
 
 Clusters are highlighted using shaded time intervals.
 
 Purpose:
 
-Validate
+- Validate
 
-speech spikes
+- speech spikes
 
-disturbance clusters
+- disturbance clusters
 
-escalation patterns
+- escalation patterns
 
 Final Output Files
+```
 processed_audio_acoustic_features.csv
 audio_loud_segments.csv
 audio_disturbance_clusters.csv
 audio_escalation_events.csv
 audio_trip_summary.csv
-Key Achievements
+```
 
-Reconstructed reliable trip timelines
 
-Implemented physically correct sound separation
+## Key Achievements
 
-Derived interpretable speech behavior signals
+- Reconstructed reliable trip timelines
 
-Built disturbance detection pipeline
+- Implemented physically correct sound separation
 
-Implemented temporal clustering and escalation detection
+- Derived interpretable speech behavior signals
 
-Produced modular outputs for fusion with motion and earnings signals
+- Built disturbance detection pipeline
+
+- Implemented temporal clustering and escalation detection
+
+- Produced modular outputs for fusion with motion and earnings signals
 
 Final Outcome
 
